@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RosterFlow · Provider Data Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9;--panel:#fff;--ink:#14181f;--ink2:#4a5261;--ink3:#8a92a1;--line:#e3e6eb;
+  --accent:#2453d6;--accent-soft:#e9effd;--good:#15803d;--good-soft:#e7f6ec;--warn:#b45309;--warn-soft:#fdf3e4;
+  --bad:#b91c1c;--bad-soft:#fdeceb;--violet:#6d3fd1;--violet-soft:#f1ebfd;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+nav{background:#0f1726;color:#c9d1df;padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh}
+.brand{color:#fff;font-weight:700;font-size:16px;padding:4px 10px 2px}
+.brand-sub{font-size:11px;color:#7d8aa3;padding:0 10px 16px}
+nav a{display:flex;align-items:center;justify-content:space-between;color:#c9d1df;text-decoration:none;padding:9px 10px;border-radius:7px;font-size:13.5px}
+nav a:hover{background:#1b2638}
+nav a.active{background:#24324a;color:#fff}
+nav .badge{background:#33425e;color:#dfe6f3;border-radius:10px;font-size:11px;padding:1px 7px}
+nav .sect{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#64728c;padding:14px 10px 4px}
+.navfoot{margin-top:auto;font-size:11px;color:#64728c;padding:10px}
+main{padding:24px 32px 60px;max-width:1280px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+h1{font-size:21px;margin:0 0 3px}
+.lede{color:var(--ink2);margin:0;max-width:760px}
+.toggle{display:flex;background:#e8ebf0;border-radius:8px;padding:3px;flex-shrink:0}
+.toggle button{border:0;background:transparent;padding:6px 12px;border-radius:6px;font:inherit;font-size:12.5px;color:var(--ink2);cursor:pointer}
+.toggle button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr 1fr}
+.kpi .lab{font-size:12px;color:var(--ink3)}
+.kpi .val{font-size:26px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12px;color:var(--ink2)}
+h2{font-size:15px;margin:0 0 10px}
+h3{font-size:13px;margin:0 0 6px;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--ink3);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid #eff1f4;vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover td{background:#f8f9fb}
+tr.sel td{background:var(--accent-soft)!important}
+.mono{font-family:"JetBrains Mono",monospace;font-size:12px}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.p-good{background:var(--good-soft);color:var(--good)}.p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-bad{background:var(--bad-soft);color:var(--bad)}.p-acc{background:var(--accent-soft);color:var(--accent)}
+.p-vio{background:var(--violet-soft);color:var(--violet)}.p-grey{background:#eef0f3;color:var(--ink2)}
+.btn{border:1px solid var(--line);background:#fff;padding:7px 12px;border-radius:7px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.btn:hover{background:#f3f5f8}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}.btn.pri:hover{background:#1c45b8}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.split{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;align-items:start}
+.bar{height:6px;background:#eceff3;border-radius:4px;overflow:hidden;width:90px;display:inline-block;vertical-align:middle}
+.bar i{display:block;height:100%}
+.ev{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed #eceff3;font-size:13px}
+.ev:last-child{border:0}
+.muted{color:var(--ink3)}.small{font-size:12px}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.compare>div{padding:14px 16px}
+.compare .before{background:#fbf7f2}.compare .after{background:#f2f8f4;border-left:1px solid var(--line)}
+.compare h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.steps{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.step{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px}
+.step.h{border-color:#f0c9a0}.step.a{border-color:#b6dcc3}
+.arrow{color:var(--ink3);font-size:12px}
+.stat{font-size:12.5px;margin-top:8px;color:var(--ink2)}
+.stat b{color:var(--ink)}
+.flow{display:flex;gap:6px;align-items:stretch;flex-wrap:wrap}
+.flow .node{flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;cursor:pointer}
+.flow .node:hover{border-color:var(--accent)}
+.flow .node b{display:block;font-size:13px}.flow .node span{font-size:11.5px;color:var(--ink3)}
+.flow .node .n{font-size:20px;font-weight:700;margin-top:4px}
+.transcript{background:#0f1726;color:#dfe6f3;border-radius:8px;padding:12px;font-family:"JetBrains Mono",monospace;font-size:12px;min-height:150px;white-space:pre-wrap}
+.transcript .ag{color:#8fb3ff}.transcript .of{color:#ffd59a}.transcript .sys{color:#7fd6a3}
+.toast{position:fixed;bottom:20px;right:20px;background:#14181f;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;max-width:380px}
+.toast.show{opacity:1;transform:none}
+.banner{background:var(--warn-soft);border:1px solid #f3d7ae;color:#7a4206;border-radius:8px;padding:8px 12px;font-size:12.5px;margin-bottom:14px}
+.empty{padding:30px;text-align:center;color:var(--ink3)}
+.chk{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f0f2f5;font-size:13px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.progress{height:8px;background:#eceff3;border-radius:5px;overflow:hidden}.progress i{display:block;height:100%;background:var(--accent);transition:width .3s}
+select{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.hidden{display:none!important}
+@media(max-width:900px){.app{grid-template-columns:1fr}nav{position:static;height:auto;flex-direction:row;flex-wrap:wrap}.navfoot,.sect,.brand-sub{display:none}.g4,.g3,.g2,.split{grid-template-columns:1fr}main{padding:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav>
+  <div class="brand">RosterFlow</div>
+  <div class="brand-sub">Provider data operations</div>
+  <a href="#overview" data-v="overview">Command center</a>
+  <div class="sect">Workflows</div>
+  <a href="#intake" data-v="intake">1 · Roster intake <span class="badge" id="nb-intake"></span></a>
+  <a href="#exceptions" data-v="exceptions">2 · Exception review <span class="badge" id="nb-exc"></span></a>
+  <a href="#outreach" data-v="outreach">3 · Provider outreach <span class="badge" id="nb-out"></span></a>
+  <a href="#compliance" data-v="compliance">4 · Directory &amp; compliance</a>
+  <div class="sect">Record</div>
+  <a href="#audit" data-v="audit">Audit trail <span class="badge" id="nb-audit"></span></a>
+  <div class="navfoot">Demo environment · synthetic data only<br><a href="#" id="reset" style="padding:0;color:#8fa2c4">Reset data</a></div>
+</nav>
+<main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"plan": {"name": "MidAmerica Health (fictional)", "members": "4M", "clinicians": "120k", "system": "FACETS-style claims"}, "groups": [{"id": "G1", "name": "Lakeside Medical Group", "tin": "99-1048372", "delegated": true, "format": "CSV, one row per provider-location"}, {"id": "G2", "name": "Summit Behavioral Partners", "tin": "99-2210945", "delegated": true, "format": "Excel export, split name columns, free-text specialty"}, {"id": "G3", "name": "Riverbend Pediatrics & Family Care", "tin": "99-3387120", "delegated": false, "format": "Emailed sheet, address in one cell, mixed date formats"}], "providers": [{"id": "P001", "npi": "9100007919", "first": "Marcus", "last": "Lopez", "cred": "MD", "specialty": "Cardiology", "taxonomy": "207RC0000X", "group": "G1", "tin": "99-1048372", "address": {"street": "3757 Lakeview Dr", "city": "Dayton", "state": "OH", "zip": "45423"}, "phone": "(317) 555-9935", "accepting": false, "status": "Active", "last_verified": "2026-03-20"}, {"id": "P002", "npi": "9100015838", "first": "Maria", "last": "Lopez", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "3911 Summit Way", "city": "Dayton", "state": "OH", "zip": "45487"}, "phone": "(614) 555-4257", "accepting": true, "status": "Active", "last_verified": "2025-10-28"}, {"id": "P003", "npi": "9100023757", "first": "Tara", "last": "Kowalski", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "9754 Elm Park Blvd", "city": "Akron", "state": "OH", "zip": "44310"}, "phone": "(937) 555-7924", "accepting": true, "status": "Active", "last_verified": "2026-08-04"}, {"id": "P004", "npi": "9100031676", "first": "Victor", "last": "Hargrove", "cred": "MD", "specialty": "Cardiology", "taxonomy": "207RC0000X", "group": "G1", "tin": "99-1048372", "address": {"street": "1619 Riverside Pkwy", "city": "Columbus", "state": "OH", "zip": "43222"}, "phone": "(419) 555-6635", "accepting": true, "status": "Active", "last_verified": "2026-09-30"}, {"id": "P005", "npi": "9100039595", "first": "Noah", "last": "Holloway", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "1391 Summit Way", "city": "Akron", "state": "OH", "zip": "44347"}, "phone": "(317) 555-6925", "accepting": true, "status": "Active", "last_verified": "2025-10-27"}, {"id": "P006", "npi": "9100047514", "first": "Priya", "last": "Brennan", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "1407 Harbor St", "city": "Toledo", "state": "OH", "zip": "43622"}, "phone": "(330) 555-5554", "accepting": true, "status": "Active", "last_verified": "2026-04-19"}, {"id": "P007", "npi": "9100055433", "first": "Lucy", "last": "Delgado", "cred": "MD", "specialty": "Cardiology", "taxonomy": "207RC0000X", "group": "G1", "tin": "99-1048372", "address": {"street": "4474 Oak Ridge Rd", "city": "Dayton", "state": "OH", "zip": "45487"}, "phone": "(317) 555-3803", "accepting": true, "status": "Active", "last_verified": "2026-06-19"}, {"id": "P008", "npi": "9100063352", "first": "Lucy", "last": "Ostrowski", "cred": "PhD", "specialty": "Clinical Psychology", "taxonomy": "103TC0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "9225 Harbor St", "city": "Toledo", "state": "OH", "zip": "43697"}, "phone": "(419) 555-1916", "accepting": false, "status": "Active", "last_verified": "2026-10-06"}, {"id": "P009", "npi": "9100071271", "first": "Mei", "last": "Fairchild", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "3556 Meadow Run", "city": "Columbus", "state": "OH", "zip": "43250"}, "phone": "(937) 555-9179", "accepting": true, "status": "Active", "last_verified": "2025-11-27"}, {"id": "P010", "npi": "9100079190", "first": "Noah", "last": "Sandoval", "cred": "MD", "specialty": "Cardiology", "taxonomy": "207RC0000X", "group": "G1", "tin": "99-1048372", "address": {"street": "4140 Summit Way", "city": "Dayton", "state": "OH", "zip": "45478"}, "phone": "(419) 555-8019", "accepting": true, "status": "Active", "last_verified": "2026-04-01"}, {"id": "P011", "npi": "9100087109", "first": "Felix", "last": "Castellano", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "8185 Oak Ridge Rd", "city": "Fort Wayne", "state": "IN", "zip": "46816"}, "phone": "(614) 555-3504", "accepting": true, "status": "Active", "last_verified": "2025-11-08"}, {"id": "P012", "npi": "9100095028", "first": "Caleb", "last": "Tran", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "6352 Meadow Run", "city": "Akron", "state": "OH", "zip": "44369"}, "phone": "(260) 555-5119", "accepting": true, "status": "Active", "last_verified": "2026-10-17"}, {"id": "P013", "npi": "9100102947", "first": "Marcus", "last": "Iqbal", "cred": "MD", "specialty": "Cardiology", "taxonomy": "207RC0000X", "group": "G1", "tin": "99-1048372", "address": {"street": "5673 Oak Ridge Rd", "city": "Indianapolis", "state": "IN", "zip": "46247"}, "phone": "(330) 555-3591", "accepting": true, "status": "Active", "last_verified": "2025-10-18"}, {"id": "P014", "npi": "9100110866", "first": "Leah", "last": "Vance", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "1843 Elm Park Blvd", "city": "Fort Wayne", "state": "IN", "zip": "46891"}, "phone": "(260) 555-4258", "accepting": false, "status": "Active", "last_verified": "2026-08-01"}, {"id": "P015", "npi": "9100118785", "first": "Tara", "last": "Hargrove", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "5410 Willow Ct", "city": "Fort Wayne", "state": "IN", "zip": "46812"}, "phone": "(614) 555-6947", "accepting": true, "status": "Active", "last_verified": "2026-05-18"}, {"id": "P016", "npi": "9100126704", "first": "Tomas", "last": "Brennan", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "1390 Oak Ridge Rd", "city": "Fort Wayne", "state": "IN", "zip": "46872"}, "phone": "(614) 555-9727", "accepting": true, "status": "Active", "last_verified": "2026-08-18"}, {"id": "P017", "npi": "9100134623", "first": "Zara", "last": "Holloway", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "8745 Meadow Run", "city": "Toledo", "state": "OH", "zip": "43664"}, "phone": "(937) 555-9835", "accepting": true, "status": "Active", "last_verified": "2025-11-03"}, {"id": "P018", "npi": "9100142542", "first": "Hannah", "last": "Moreau", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "6218 Willow Ct", "city": "Akron", "state": "OH", "zip": "44376"}, "phone": "(330) 555-2982", "accepting": false, "status": "Active", "last_verified": "2026-09-20"}, {"id": "P019", "npi": "9100150461", "first": "Jonah", "last": "Lopez", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "3708 Maple Ave", "city": "Fort Wayne", "state": "IN", "zip": "46819"}, "phone": "(317) 555-1964", "accepting": false, "status": "Active", "last_verified": "2026-10-06"}, {"id": "P020", "npi": "9100158380", "first": "Jonah", "last": "Okafor", "cred": "LCSW", "specialty": "Licensed Clinical Social Worker", "taxonomy": "1041C0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "4662 Willow Ct", "city": "Dayton", "state": "OH", "zip": "45437"}, "phone": "(260) 555-3167", "accepting": true, "status": "Active", "last_verified": "2026-01-03"}, {"id": "P021", "npi": "9100166299", "first": "Zara", "last": "Castellano", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "3219 Oak Ridge Rd", "city": "Akron", "state": "OH", "zip": "44322"}, "phone": "(317) 555-8062", "accepting": true, "status": "Active", "last_verified": "2026-03-26"}, {"id": "P022", "npi": "9100174218", "first": "Noah", "last": "Achebe", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "1712 Maple Ave", "city": "Indianapolis", "state": "IN", "zip": "46261"}, "phone": "(317) 555-6559", "accepting": true, "status": "Active", "last_verified": "2026-08-28"}, {"id": "P023", "npi": "9100182137", "first": "Tomas", "last": "Larsen", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "7450 Lakeview Dr", "city": "Fort Wayne", "state": "IN", "zip": "46864"}, "phone": "(937) 555-5563", "accepting": true, "status": "Active", "last_verified": "2026-09-14"}, {"id": "P024", "npi": "9100190056", "first": "Irene", "last": "Lindqvist", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "8956 Maple Ave", "city": "Columbus", "state": "OH", "zip": "43221"}, "phone": "(937) 555-3724", "accepting": true, "status": "Active", "last_verified": "2026-02-18"}, {"id": "P025", "npi": "9100197975", "first": "Victor", "last": "Achebe", "cred": "MD", "specialty": "Obstetrics & Gynecology", "taxonomy": "207V00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "2797 Riverside Pkwy", "city": "Columbus", "state": "OH", "zip": "43210"}, "phone": "(330) 555-5345", "accepting": true, "status": "Active", "last_verified": "2026-03-04"}, {"id": "P026", "npi": "9100205894", "first": "Chloe", "last": "Kowalski", "cred": "LCSW", "specialty": "Licensed Clinical Social Worker", "taxonomy": "1041C0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "9205 Willow Ct", "city": "Indianapolis", "state": "IN", "zip": "46229"}, "phone": "(937) 555-5861", "accepting": false, "status": "Active", "last_verified": "2026-09-23"}, {"id": "P027", "npi": "9100213813", "first": "Tara", "last": "Brennan", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "921 Meadow Run", "city": "Columbus", "state": "OH", "zip": "43271"}, "phone": "(260) 555-9701", "accepting": false, "status": "Active", "last_verified": "2026-02-04"}, {"id": "P028", "npi": "9100221732", "first": "Samuel", "last": "Achebe", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "1213 Harbor St", "city": "Columbus", "state": "OH", "zip": "43261"}, "phone": "(614) 555-5033", "accepting": true, "status": "Active", "last_verified": "2026-10-02"}, {"id": "P029", "npi": "9100229651", "first": "Samuel", "last": "Kowalski", "cred": "LCSW", "specialty": "Licensed Clinical Social Worker", "taxonomy": "1041C0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "9360 Summit Way", "city": "Fort Wayne", "state": "IN", "zip": "46850"}, "phone": "(419) 555-4346", "accepting": true, "status": "Active", "last_verified": "2026-05-15"}, {"id": "P030", "npi": "9100237570", "first": "Tomas", "last": "Abbott", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "5015 Willow Ct", "city": "Dayton", "state": "OH", "zip": "45450"}, "phone": "(614) 555-1152", "accepting": true, "status": "Active", "last_verified": "2026-01-07"}, {"id": "P031", "npi": "9100245489", "first": "Elena", "last": "Okafor", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "4445 Lakeview Dr", "city": "Fort Wayne", "state": "IN", "zip": "46854"}, "phone": "(614) 555-5002", "accepting": true, "status": "Active", "last_verified": "2026-08-03"}, {"id": "P032", "npi": "9100253408", "first": "Irene", "last": "Petrakis", "cred": "LCSW", "specialty": "Licensed Clinical Social Worker", "taxonomy": "1041C0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "5056 Meadow Run", "city": "Indianapolis", "state": "IN", "zip": "46293"}, "phone": "(260) 555-1128", "accepting": true, "status": "Active", "last_verified": "2026-01-12"}, {"id": "P033", "npi": "9100261327", "first": "Isaac", "last": "Varga", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "4433 Oak Ridge Rd", "city": "Dayton", "state": "OH", "zip": "45423"}, "phone": "(317) 555-3546", "accepting": true, "status": "Active", "last_verified": "2025-12-17"}, {"id": "P034", "npi": "9100269246", "first": "Victor", "last": "Moreau", "cred": "MD", "specialty": "Cardiology", "taxonomy": "207RC0000X", "group": "G1", "tin": "99-1048372", "address": {"street": "4425 Summit Way", "city": "Dayton", "state": "OH", "zip": "45472"}, "phone": "(419) 555-1832", "accepting": false, "status": "Active", "last_verified": "2026-03-20"}, {"id": "P035", "npi": "9100277165", "first": "Arjun", "last": "Brennan", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "2243 Elm Park Blvd", "city": "Toledo", "state": "OH", "zip": "43630"}, "phone": "(317) 555-8239", "accepting": true, "status": "Active", "last_verified": "2026-03-18"}, {"id": "P036", "npi": "9100285084", "first": "Owen", "last": "Lopez", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "2542 Summit Way", "city": "Columbus", "state": "OH", "zip": "43214"}, "phone": "(419) 555-3426", "accepting": true, "status": "Active", "last_verified": "2026-10-01"}, {"id": "P037", "npi": "9100293003", "first": "Isaac", "last": "Delgado", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "3541 Harbor St", "city": "Toledo", "state": "OH", "zip": "43695"}, "phone": "(614) 555-6794", "accepting": true, "status": "Active", "last_verified": "2026-03-28"}, {"id": "P038", "npi": "9100300922", "first": "Omar", "last": "Varga", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "3000 Riverside Pkwy", "city": "Dayton", "state": "OH", "zip": "45413"}, "phone": "(937) 555-6442", "accepting": true, "status": "Active", "last_verified": "2026-03-26"}, {"id": "P039", "npi": "9100308841", "first": "Lucy", "last": "Lindqvist", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "734 Willow Ct", "city": "Akron", "state": "OH", "zip": "44338"}, "phone": "(937) 555-8541", "accepting": true, "status": "Active", "last_verified": "2026-06-28"}, {"id": "P040", "npi": "9100316760", "first": "Nina", "last": "Lopez", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "5478 Elm Park Blvd", "city": "Akron", "state": "OH", "zip": "44318"}, "phone": "(419) 555-6753", "accepting": true, "status": "Active", "last_verified": "2026-04-01"}, {"id": "P041", "npi": "9100324679", "first": "Tara", "last": "Pruitt", "cred": "MD", "specialty": "Psychiatry", "taxonomy": "2084P0800X", "group": "G2", "tin": "99-2210945", "address": {"street": "4379 Lakeview Dr", "city": "Columbus", "state": "OH", "zip": "43284"}, "phone": "(419) 555-1626", "accepting": false, "status": "Active", "last_verified": "2026-03-14"}, {"id": "P042", "npi": "9100332598", "first": "Sofia", "last": "Quintero", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "8479 Oak Ridge Rd", "city": "Akron", "state": "OH", "zip": "44359"}, "phone": "(260) 555-4114", "accepting": true, "status": "Active", "last_verified": "2025-10-25"}, {"id": "P043", "npi": "9100340517", "first": "Caleb", "last": "Lopez", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "7166 Oak Ridge Rd", "city": "Toledo", "state": "OH", "zip": "43695"}, "phone": "(419) 555-6143", "accepting": true, "status": "Active", "last_verified": "2026-08-20"}, {"id": "P044", "npi": "9100348436", "first": "Isaac", "last": "Vance", "cred": "PhD", "specialty": "Clinical Psychology", "taxonomy": "103TC0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "6791 Cedar Ln", "city": "Indianapolis", "state": "IN", "zip": "46261"}, "phone": "(317) 555-5844", "accepting": true, "status": "Active", "last_verified": "2026-07-16"}, {"id": "P045", "npi": "9100356355", "first": "Ayesha", "last": "Iqbal", "cred": "MD", "specialty": "Pediatrics", "taxonomy": "208000000X", "group": "G3", "tin": "99-3387120", "address": {"street": "2951 Meadow Run", "city": "Indianapolis", "state": "IN", "zip": "46282"}, "phone": "(419) 555-7653", "accepting": true, "status": "Active", "last_verified": "2026-10-22"}, {"id": "P046", "npi": "9100364274", "first": "Isaac", "last": "Nakamura", "cred": "MD", "specialty": "Internal Medicine", "taxonomy": "207R00000X", "group": "G1", "tin": "99-1048372", "address": {"street": "9602 Meadow Run", "city": "Akron", "state": "OH", "zip": "44393"}, "phone": "(419) 555-8618", "accepting": true, "status": "Active", "last_verified": "2025-11-11"}, {"id": "P047", "npi": "9100372193", "first": "Victor", "last": "Vance", "cred": "PhD", "specialty": "Clinical Psychology", "taxonomy": "103TC0700X", "group": "G2", "tin": "99-2210945", "address": {"street": "2880 Oak Ridge Rd", "city": "Indianapolis", "state": "IN", "zip": "46246"}, "phone": "(260) 555-6491", "accepting": false, "status": "Active", "last_verified": "2026-06-24"}, {"id": "P048", "npi": "9100380112", "first": "Isaac", "last": "Castellano", "cred": "MD", "specialty": "Family Medicine", "taxonomy": "207Q00000X", "group": "G3", "tin": "99-3387120", "address": {"street": "500 Maple Ave", "city": "Dayton", "state": "OH", "zip": "45441"}, "phone": "(330) 555-2193", "accepting": true, "status": "Active", "last_verified": "2025-12-04"}], "reference": {"P001": {"address": {"street": "3757 Lakeview Dr", "city": "Dayton", "state": "OH", "zip": "45423"}, "phone": "(317) 555-9935", "specialty": "Cardiology", "license": "Active", "attested": "2026-08-25"}, "P002": {"address": {"street": "3911 Summit Way", "city": "Dayton", "state": "OH", "zip": "45487"}, "phone": "(614) 555-4257", "specialty": "Psychiatry", "license": "Active", "attested": "2026-10-13"}, "P003": {"address": {"street": "9754 Elm Park Blvd", "city": "Akron", "state": "OH", "zip": "44310"}, "phone": "(937) 555-7924", "specialty": "Family Medicine", "license": "Active", "attested": "2026-08-07"}, "P004": {"address": {"street": "9076 Willow Ct", "city": "Akron", "state": "OH", "zip": "44330"}, "phone": "(419) 555-6635", "specialty": "Cardiology", "license": "Active", "attested": "2026-08-09"}, "P005": {"address": {"street": "1391 Summit Way", "city": "Akron", "state": "OH", "zip": "44347"}, "phone": "(317) 555-6925", "specialty": "Psychiatry", "license": "Active", "attested": "2026-09-18"}, "P006": {"address": {"street": "1407 Harbor St", "city": "Toledo", "state": "OH", "zip": "43622"}, "phone": "(330) 555-5554", "specialty": "Family Medicine", "license": "Active", "attested": "2026-09-04"}, "P007": {"address": {"street": "4474 Oak Ridge Rd", "city": "Dayton", "state": "OH", "zip": "45487"}, "phone": "(419) 555-6238", "specialty": "Cardiology", "license": "Active", "attested": "2026-09-16"}, "P008": {"address": {"street": "9225 Harbor St", "city": "Toledo", "state": "OH", "zip": "43697"}, "phone": "(419) 555-1916", "specialty": "Clinical Psychology", "license": "Active", "attested": "2026-10-06"}, "P009": {"address": {"street": "3556 Meadow Run", "city": "Columbus", "state": "OH", "zip": "43250"}, "phone": "(937) 555-9179", "specialty": "Pediatrics", "license": "Active", "attested": "2026-10-19"}, "P010": {"address": {"street": "4140 Summit Way", "city": "Dayton", "state": "OH", "zip": "45478"}, "phone": "(419) 555-8019", "specialty": "Cardiology", "license": "Active", "attested": "2026-08-15"}, "P011": {"address": {"street": "7877 Willow Ct", "city": "Indianapolis", "state": "IN", "zip": "46243"}, "phone": "(614) 555-3504", "specialty": "Psychiatry", "license": "Active", "attested": "2026-08-10"}, "P012": {"address": {"street": "6352 Meadow Run", "city": "Akron", "state": "OH", "zip": "44369"}, "phone": "(260) 555-5119", "specialty": "Family Medicine", "license": "Active", "attested": "2026-11-06"}, "P013": {"address": {"street": "5673 Oak Ridge Rd", "city": "Indianapolis", "state": "IN", "zip": "46247"}, "phone": "(330) 555-3591", "specialty": "Cardiology", "license": "Active", "attested": "2026-07-15"}, "P014": {"address": {"street": "1843 Elm Park Blvd", "city": "Fort Wayne", "state": "IN", "zip": "46891"}, "phone": "(260) 555-4258", "specialty": "Psychiatry", "license": "Expired 2026-09-30", "attested": "2026-08-02"}, "P015": {"address": {"street": "5410 Willow Ct", "city": "Fort Wayne", "state": "IN", "zip": "46812"}, "phone": "(614) 555-6947", "specialty": "Family Medicine", "license": "Active", "attested": "2026-07-19"}, "P016": {"address": {"street": "1390 Oak Ridge Rd", "city": "Fort Wayne", "state": "IN", "zip": "46872"}, "phone": "(614) 555-9727", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-07-31"}, "P017": {"address": {"street": "8745 Meadow Run", "city": "Toledo", "state": "OH", "zip": "43664"}, "phone": "(937) 555-9835", "specialty": "Psychiatry", "license": "Active", "attested": "2026-07-16"}, "P018": {"address": {"street": "6218 Willow Ct", "city": "Akron", "state": "OH", "zip": "44376"}, "phone": "(330) 555-2982", "specialty": "Pediatrics", "license": "Active", "attested": "2026-10-24"}, "P019": {"address": {"street": "3708 Maple Ave", "city": "Fort Wayne", "state": "IN", "zip": "46819"}, "phone": "(260) 555-2320", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-07-30"}, "P020": {"address": {"street": "4662 Willow Ct", "city": "Dayton", "state": "OH", "zip": "45437"}, "phone": "(260) 555-3167", "specialty": "Licensed Clinical Social Worker", "license": "Active", "attested": "2026-09-13"}, "P021": {"address": {"street": "3219 Oak Ridge Rd", "city": "Akron", "state": "OH", "zip": "44322"}, "phone": "(317) 555-8062", "specialty": "Pediatrics", "license": "Active", "attested": "2026-10-09"}, "P022": {"address": {"street": "1712 Maple Ave", "city": "Indianapolis", "state": "IN", "zip": "46261"}, "phone": "(317) 555-6559", "specialty": "Family Medicine", "license": "Active", "attested": "2026-10-15"}, "P023": {"address": {"street": "4643 Summit Way", "city": "Dayton", "state": "OH", "zip": "45472"}, "phone": "(937) 555-5563", "specialty": "Psychiatry", "license": "Active", "attested": "2026-07-27"}, "P024": {"address": {"street": "8956 Maple Ave", "city": "Columbus", "state": "OH", "zip": "43221"}, "phone": "(937) 555-3724", "specialty": "Family Medicine", "license": "Active", "attested": "2026-08-09"}, "P025": {"address": {"street": "2797 Riverside Pkwy", "city": "Columbus", "state": "OH", "zip": "43210"}, "phone": "(330) 555-5345", "specialty": "Obstetrics & Gynecology", "license": "Active", "attested": "2026-09-01"}, "P026": {"address": {"street": "9205 Willow Ct", "city": "Indianapolis", "state": "IN", "zip": "46229"}, "phone": "(937) 555-5861", "specialty": "Licensed Clinical Social Worker", "license": "Inactive", "attested": "2026-09-08"}, "P027": {"address": {"street": "921 Meadow Run", "city": "Columbus", "state": "OH", "zip": "43271"}, "phone": "(260) 555-9701", "specialty": "Pediatrics", "license": "Active", "attested": "2026-10-31"}, "P028": {"address": {"street": "1213 Harbor St", "city": "Columbus", "state": "OH", "zip": "43261"}, "phone": "(614) 555-5033", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-08-27"}, "P029": {"address": {"street": "9360 Summit Way", "city": "Fort Wayne", "state": "IN", "zip": "46850"}, "phone": "(419) 555-4346", "specialty": "Licensed Clinical Social Worker", "license": "Active", "attested": "2026-10-06"}, "P030": {"address": {"street": "5015 Willow Ct", "city": "Dayton", "state": "OH", "zip": "45450"}, "phone": "(614) 555-1152", "specialty": "Pediatrics", "license": "Active", "attested": "2026-07-21"}, "P031": {"address": {"street": "4019 Elm Park Blvd", "city": "Indianapolis", "state": "IN", "zip": "46266"}, "phone": "(614) 555-5002", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-10-22"}, "P032": {"address": {"street": "5056 Meadow Run", "city": "Indianapolis", "state": "IN", "zip": "46293"}, "phone": "(260) 555-1128", "specialty": "Licensed Clinical Social Worker", "license": "Active", "attested": "2026-09-09"}, "P033": {"address": {"street": "4433 Oak Ridge Rd", "city": "Dayton", "state": "OH", "zip": "45423"}, "phone": "(317) 555-3546", "specialty": "Family Medicine", "license": "Active", "attested": "2026-10-20"}, "P034": {"address": {"street": "4425 Summit Way", "city": "Dayton", "state": "OH", "zip": "45472"}, "phone": "(419) 555-1832", "specialty": "Cardiology", "license": "Active", "attested": "2026-07-27"}, "P035": {"address": {"street": "2243 Elm Park Blvd", "city": "Toledo", "state": "OH", "zip": "43630"}, "phone": "(317) 555-8239", "specialty": "Psychiatry", "license": "Inactive", "attested": "2026-09-08"}, "P036": {"address": {"street": "2542 Summit Way", "city": "Columbus", "state": "OH", "zip": "43214"}, "phone": "(419) 555-3426", "specialty": "Family Medicine", "license": "Active", "attested": "2026-08-13"}, "P037": {"address": {"street": "3541 Harbor St", "city": "Toledo", "state": "OH", "zip": "43695"}, "phone": "(614) 555-6794", "specialty": "Family Medicine", "license": "Active", "attested": "2026-08-31"}, "P038": {"address": {"street": "3000 Riverside Pkwy", "city": "Dayton", "state": "OH", "zip": "45413"}, "phone": "(937) 555-6442", "specialty": "Psychiatry", "license": "Active", "attested": "2026-08-27"}, "P039": {"address": {"street": "734 Willow Ct", "city": "Akron", "state": "OH", "zip": "44338"}, "phone": "(937) 555-8541", "specialty": "Family Medicine", "license": "Active", "attested": "2026-08-22"}, "P040": {"address": {"street": "4781 Harbor St", "city": "Columbus", "state": "OH", "zip": "43244"}, "phone": "(419) 555-6753", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-09-27"}, "P041": {"address": {"street": "4379 Lakeview Dr", "city": "Columbus", "state": "OH", "zip": "43284"}, "phone": "(419) 555-1626", "specialty": "Psychiatry", "license": "Active", "attested": "2026-08-02"}, "P042": {"address": {"street": "8479 Oak Ridge Rd", "city": "Akron", "state": "OH", "zip": "44359"}, "phone": "(260) 555-4114", "specialty": "Pediatrics", "license": "Active", "attested": "2026-07-15"}, "P043": {"address": {"street": "7166 Oak Ridge Rd", "city": "Toledo", "state": "OH", "zip": "43695"}, "phone": "(419) 555-6143", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-09-11"}, "P044": {"address": {"street": "6791 Cedar Ln", "city": "Indianapolis", "state": "IN", "zip": "46261"}, "phone": "(317) 555-5844", "specialty": "Clinical Psychology", "license": "Active", "attested": "2026-08-20"}, "P045": {"address": {"street": "2951 Meadow Run", "city": "Indianapolis", "state": "IN", "zip": "46282"}, "phone": "(419) 555-7653", "specialty": "Pediatrics", "license": "Active", "attested": "2026-07-25"}, "P046": {"address": {"street": "9602 Meadow Run", "city": "Akron", "state": "OH", "zip": "44393"}, "phone": "(419) 555-8618", "specialty": "Internal Medicine", "license": "Active", "attested": "2026-08-06"}, "P047": {"address": {"street": "2880 Oak Ridge Rd", "city": "Indianapolis", "state": "IN", "zip": "46246"}, "phone": "(260) 555-6491", "specialty": "Clinical Psychology", "license": "Active", "attested": "2026-07-15"}, "P048": {"address": {"street": "500 Maple Ave", "city": "Dayton", "state": "OH", "zip": "45441"}, "phone": "(330) 555-2193", "specialty": "Family Medicine", "license": "Active", "attested": "2026-09-03"}}, "rosters": {"G1": [{"Prov Name": "Lopez, Marcus MD", "NPI #": "9100007919", "Spec": "Cardiology", "Addr1": "3757 Lakeview Dr", "City": "Dayton", "ST": "OH", "Zip": "45423", "Phone": "(317) 555-9935", "Accepting New Pts": "N", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Hargrove, Victor MD", "NPI #": "9100031676", "Spec": "Cardiology", "Addr1": "9076 Willow Ct", "City": "Akron", "ST": "OH", "Zip": "44330", "Phone": "(419) 555-6635", "Accepting New Pts": "Y", "Action": "UPDATE", "Eff Date": "11/01/2026"}, {"Prov Name": "Delgado, Lucy MD", "NPI #": "9100055433", "Spec": "Cardiology", "Addr1": "4474 Oak Ridge Rd", "City": "Dayton", "ST": "OH", "Zip": "45487", "Phone": "(419) 555-6238", "Accepting New Pts": "Y", "Action": "UPDATE", "Eff Date": "11/01/2026"}, {"Prov Name": "Sandoval, Noah MD", "NPI #": "9100079190", "Spec": "Cardiology", "Addr1": "4140 Summit Way", "City": "Dayton", "ST": "OH", "Zip": "45478", "Phone": "(419) 555-8019", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Iqbal, Marcus MD", "NPI #": "9100102947", "Spec": "Cardiology", "Addr1": "5673 Oak Ridge Rd", "City": "Indianapolis", "ST": "IN", "Zip": "46247", "Phone": "(330) 555-3591", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Brennan, Tomas MD", "NPI #": "9100126704", "Spec": "Internal Medicine", "Addr1": "1390 Oak Ridge Rd", "City": "Fort Wayne", "ST": "IN", "Zip": "46872", "Phone": "(614) 555-9727", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Lopez, Jonah MD", "NPI #": "9100150461", "Spec": "Internal Medicine", "Addr1": "3708 Maple Ave", "City": "Fort Wayne", "ST": "IN", "Zip": "46819", "Phone": "(260) 555-2320", "Accepting New Pts": "N", "Action": "UPDATE", "Eff Date": "11/01/2026"}, {"Prov Name": "Achebe, Noah MD", "NPI #": "9100174218", "Spec": "Family Medicine", "Addr1": "1712 Maple Ave", "City": "Indianapolis", "ST": "IN", "Zip": "46261", "Phone": "(317) 555-6559", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Achebe, Victor MD", "NPI #": "9100197975", "Spec": "Obstetrics & Gynecology", "Addr1": "2797 Riverside Pkwy", "City": "Columbus", "ST": "OH", "Zip": "43210", "Phone": "(330) 555-5345", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Achebe, Samuel MD", "NPI #": "9100221732", "Spec": "Internal Medicine", "Addr1": "1213 Harbor St", "City": "Columbus", "ST": "OH", "Zip": "43261", "Phone": "(614) 555-5033", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Okafor, Elena MD", "NPI #": "9100245489", "Spec": "Internal Medicine", "Addr1": "4019 Elm Park Blvd", "City": "Indianapolis", "ST": "IN", "Zip": "46266", "Phone": "(614) 555-5002", "Accepting New Pts": "Y", "Action": "UPDATE", "Eff Date": "11/01/2026"}, {"Prov Name": "Moreau, Victor MD", "NPI #": "9100269246", "Spec": "Cardiology", "Addr1": "4425 Summit Way", "City": "Dayton", "ST": "OH", "Zip": "45472", "Phone": "(419) 555-1832", "Accepting New Pts": "N", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Delgado, Isaac MD", "NPI #": "9100293003", "Spec": "Family Medicine", "Addr1": "3541 Harbor St", "City": "Toledo", "ST": "OH", "Zip": "43695", "Phone": "(614) 555-6794", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Lopez, Nina MD", "NPI #": "9100316760", "Spec": "Internal Medicine", "Addr1": "4781 Harbor St", "City": "Columbus", "ST": "OH", "Zip": "43244", "Phone": "(419) 555-6753", "Accepting New Pts": "Y", "Action": "UPDATE", "Eff Date": "11/01/2026"}, {"Prov Name": "Lopez, Caleb MD", "NPI #": "9100340517", "Spec": "Internal Medicine", "Addr1": "7166 Oak Ridge Rd", "City": "Toledo", "ST": "OH", "Zip": "43695", "Phone": "(419) 555-6143", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Nakamura, Isaac MD", "NPI #": "9100364274", "Spec": "Internal Medicine", "Addr1": "9602 Meadow Run", "City": "Akron", "ST": "OH", "Zip": "44393", "Phone": "(419) 555-8618", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}, {"Prov Name": "Fenwick, Clara MD", "NPI #": "", "Spec": "Internal Med", "Addr1": "2210 Harbor St", "City": "Columbus", "ST": "OH", "Zip": "43215", "Phone": "(614) 555-2290", "Accepting New Pts": "Y", "Action": "ADD", "Eff Date": "11/15/2026"}, {"Prov Name": "Sandoval, Noah MD", "NPI #": "9100079190", "Spec": "Cardiology", "Addr1": "4140 Summit Way", "City": "Dayton", "ST": "OH", "Zip": "45478", "Phone": "(419) 555-8019", "Accepting New Pts": "Y", "Action": "NO CHANGE", "Eff Date": "11/01/2026"}], "G2": [{"Last": "LOPEZ", "First": "MARIA", "Degree": "MD", "Provider ID": "9100015838", "Specialty Desc": "Family Practice", "Practice Location": "3911 Summit Way, Dayton OH 45487", "Office #": "614-555-4257", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "HOLLOWAY", "First": "NOAH", "Degree": "MD", "Provider ID": "9100039595", "Specialty Desc": "Psych - Adult", "Practice Location": "1391 Summit Way, Akron OH 44347", "Office #": "317-555-6925", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "OSTROWSKI", "First": "LUCY", "Degree": "PhD", "Provider ID": "9100063352", "Specialty Desc": "Psychologist (PhD)", "Practice Location": "9225 Harbor St, Toledo OH 43697", "Office #": "419-555-1916", "Panel": "Closed", "Change": "", "Term Dt": ""}, {"Last": "CASTELLANO", "First": "FELIX", "Degree": "MD", "Provider ID": "9100087109", "Specialty Desc": "Psych - Adult", "Practice Location": "7877 Willow Ct, Indianapolis IN 46243", "Office #": "614-555-3504", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "VANCE", "First": "LEAH", "Degree": "MD", "Provider ID": "9100110866", "Specialty Desc": "Psych - Adult", "Practice Location": "1843 Elm Park Blvd, Fort Wayne IN 46891", "Office #": "260-555-4258", "Panel": "Closed", "Change": "", "Term Dt": ""}, {"Last": "HOLLOWAY", "First": "ZARA", "Degree": "MD", "Provider ID": "9100134623", "Specialty Desc": "Psych - Adult", "Practice Location": "8745 Meadow Run, Toledo OH 43664", "Office #": "937-555-9835", "Panel": "Open", "Change": "TERM", "Term Dt": "2026-08-31"}, {"Last": "OKAFOR", "First": "JONAH", "Degree": "LCSW", "Provider ID": "9100158380", "Specialty Desc": "Therapist / LCSW", "Practice Location": "4662 Willow Ct, Dayton OH 45437", "Office #": "260-555-3167", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "LARSEN", "First": "TOMAS", "Degree": "MD", "Provider ID": "9100182137", "Specialty Desc": "Psych - Adult", "Practice Location": "4643 Summit Way, Dayton OH 45472", "Office #": "937-555-5563", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "KOWALSKI", "First": "CHLOE", "Degree": "LCSW", "Provider ID": "9100205894", "Specialty Desc": "Therapist / LCSW", "Practice Location": "9205 Willow Ct, Indianapolis IN 46229", "Office #": "937-555-5861", "Panel": "Closed", "Change": "", "Term Dt": ""}, {"Last": "KOWALSKI", "First": "SAMUEL", "Degree": "LCSW", "Provider ID": "9100229651", "Specialty Desc": "Therapist / LCSW", "Practice Location": "9360 Summit Way, Fort Wayne IN 46850", "Office #": "419-555-4346", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "PETRAKIS", "First": "IRENE", "Degree": "LCSW", "Provider ID": "9100253408", "Specialty Desc": "Therapist / LCSW", "Practice Location": "5056 Meadow Run, Indianapolis IN 46293", "Office #": "260-555-1128", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "BRENNAN", "First": "ARJUN", "Degree": "MD", "Provider ID": "9100277165", "Specialty Desc": "Psych - Adult", "Practice Location": "2243 Elm Park Blvd, Toledo OH 43630", "Office #": "317-555-8239", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "VARGA", "First": "OMAR", "Degree": "MD", "Provider ID": "9100300922", "Specialty Desc": "Psych - Adult", "Practice Location": "3000 Riverside Pkwy, Dayton OH 45413", "Office #": "937-555-6442", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "PRUITT", "First": "TARA", "Degree": "MD", "Provider ID": "9100324679", "Specialty Desc": "Psych - Adult", "Practice Location": "4379 Lakeview Dr, Columbus OH 43284", "Office #": "419-555-1626", "Panel": "Closed", "Change": "", "Term Dt": ""}, {"Last": "VANCE", "First": "ISAAC", "Degree": "PhD", "Provider ID": "9100348436", "Specialty Desc": "Psychologist (PhD)", "Practice Location": "6791 Cedar Ln, Indianapolis IN 46261", "Office #": "317-555-5844", "Panel": "Open", "Change": "", "Term Dt": ""}, {"Last": "VANCE", "First": "VICTOR", "Degree": "PhD", "Provider ID": "9100372193", "Specialty Desc": "Psychologist (PhD)", "Practice Location": "2880 Oak Ridge Rd, Indianapolis IN 46246", "Office #": "260-555-6491", "Panel": "Closed", "Change": "", "Term Dt": ""}], "G3": [{"Provider": "Dr. Tara Kowalski", "NPI": "9100023757", "Type": "Family Medicine", "Location (full)": "9754 Elm Park Blvd Akron, OH 44310", "Tel": "(937) 555-7924", "New pts?": "yes", "Start": "2019-03-04"}, {"Provider": "Dr. Priya Brennan", "NPI": "9100047514", "Type": "Family Medicine", "Location (full)": "1407 Harbor St Toledo, OH 43622", "Tel": "(330) 555-5554", "New pts?": "yes", "Start": "2019-03-04"}, {"Provider": "Dr. Mei Fairchild", "NPI": "9100071271", "Type": "Pediatrics", "Location (full)": "3556 Meadow Run Columbus, OH 43250", "Tel": "(614) 555-12", "New pts?": "yes", "Start": "2019-03-04"}, {"Provider": "Dr. Caleb Tran", "NPI": "9100095028", "Type": "Family Medicine", "Location (full)": "6352 Meadow Run Akron, OH 44369", "Tel": "(260) 555-5119", "New pts?": "yes", "Start": "March 2019"}, {"Provider": "Dr. Tara Hargrove", "NPI": "9100118785", "Type": "Family Medicine", "Location (full)": "5410 Willow Ct Fort Wayne, IN 46812", "Tel": "(614) 555-6947", "New pts?": "yes", "Start": "2019-03-04"}, {"Provider": "Dr. Hannah Moreau", "NPI": "9100142542", "Type": "Pediatrics", "Location (full)": "6218 Willow Ct Akron, OH 44376", "Tel": "(330) 555-2982", "New pts?": "no", "Start": "2019-03-04"}, {"Provider": "Dr. Zara Castellano", "NPI": "9100166299", "Type": "Pediatrics", "Location (full)": "3219 Oak Ridge Rd Akron, OH 44322", "Tel": "(317) 555-8062", "New pts?": "yes", "Start": "3/4/2019"}, {"Provider": "Dr. Irene Lindqvist", "NPI": "9100190056", "Type": "Family Medicine", "Location (full)": "8956 Maple Ave Columbus, OH 43221", "Tel": "(937) 555-3724", "New pts?": "yes", "Start": "March 2019"}, {"Provider": "Dr. Tara Brennan", "NPI": "9100213813", "Type": "Pediatrics", "Location (full)": "921 Meadow Run Columbus, OH 43271", "Tel": "(260) 555-9701", "New pts?": "no", "Start": "March 2019"}, {"Provider": "Dr. Tomas Abbott", "NPI": "9100237570", "Type": "Pediatrics", "Location (full)": "5015 Willow Ct Dayton, OH 45450", "Tel": "(614) 555-1152", "New pts?": "yes", "Start": "04-Mar-19"}, {"Provider": "Dr. Isaac Varga", "NPI": "9100261327", "Type": "Family Medicine", "Location (full)": "4433 Oak Ridge Rd Dayton, OH 45423", "Tel": "(317) 555-3546", "New pts?": "yes", "Start": "March 2019"}, {"Provider": "Dr. Owen Lopez", "NPI": "9100285084", "Type": "Family Medicine", "Location (full)": "2542 Summit Way Columbus, OH 43214", "Tel": "(419) 555-3426", "New pts?": "yes", "Start": "March 2019"}, {"Provider": "Dr. Lucy Lindqvist", "NPI": "9100308841", "Type": "Family Medicine", "Location (full)": "734 Willow Ct Akron, OH 44338", "Tel": "(937) 555-8541", "New pts?": "yes", "Start": "3/4/2019"}, {"Provider": "Dr. Sofia Quintero", "NPI": "9100332598", "Type": "Pediatrics", "Location (full)": "8479 Oak Ridge Rd Akron, OH 44359", "Tel": "(260) 555-4114", "New pts?": "yes", "Start": "2019-03-04"}, {"Provider": "Dr. Ayesha Iqbal", "NPI": "9100356355", "Type": "Pediatrics", "Location (full)": "2951 Meadow Run Indianapolis, IN 46282", "Tel": "(419) 555-7653", "New pts?": "yes", "Start": "March 2019"}, {"Provider": "Dr. Isaac Castellano", "NPI": "9100380112", "Type": "Family Medicine", "Location (full)": "500 Maple Ave Dayton, OH 45441", "Tel": "(330) 555-2193", "New pts?": "yes", "Start": "March 2019"}]}, "issues": [{"roster": "G1", "row": 17, "kind": "Missing NPI", "pid": null, "detail": "New provider 'Clara Fenwick' added with blank NPI.", "confidence": 0.41, "suggestion": "Match by name + TIN + address to registry candidate 9000871234", "evidence": ["Name+address match in registry: 1 candidate", "TIN matches Lakeside", "No NPI on roster"]}, {"roster": "G1", "row": 18, "kind": "Duplicate row", "pid": "P010", "detail": "Row duplicates Noah Sandoval (same NPI, location).", "confidence": 0.98, "suggestion": "Auto-merge duplicate", "evidence": ["Identical NPI, TIN, address"]}, {"roster": "G2", "row": 1, "kind": "Specialty conflict", "pid": "P002", "detail": "Maria Lopez sent as 'Family Practice'; plan + self-attested source say Psychiatry.", "confidence": 0.88, "suggestion": "Keep Psychiatry (2084P0800X); flag roster mapping", "evidence": ["Plan record: Psychiatry", "Self-attested source: Psychiatry", "Board certification: Psychiatry", "Roster: Family Practice"]}, {"roster": "G2", "row": 6, "kind": "Retro termination", "pid": "P017", "detail": "Zara Holloway termed effective 2026-08-31 (72 days ago). Claims since then may be mispriced.", "confidence": 0.93, "suggestion": "Apply term; route claims after 08/31 to payment integrity", "evidence": ["Roster term date in past", "No claims-side term yet"]}, {"roster": "G2", "row": 9, "kind": "Possible ghost listing", "pid": "P026", "detail": "Chloe Kowalski still listed but license shows Inactive and no claims in 14 months.", "confidence": 0.52, "suggestion": "Send to outreach before removing (adequacy check: psychiatry, county)", "evidence": ["License: Inactive", "No claims 14 months", "Roster: no change sent"]}, {"roster": "G2", "row": 12, "kind": "Possible ghost listing", "pid": "P035", "detail": "Arjun Brennan still listed but license shows Inactive and no claims in 14 months.", "confidence": 0.52, "suggestion": "Send to outreach before removing (adequacy check: psychiatry, county)", "evidence": ["License: Inactive", "No claims 14 months", "Roster: no change sent"]}, {"roster": "G3", "row": 3, "kind": "Invalid phone", "pid": "P009", "detail": "Phone '(614) 555-12' for Mei Fairchild is incomplete.", "confidence": 0.35, "suggestion": "Send to outreach to confirm number", "evidence": ["Phone fails format check", "Self-attested source has different number"]}, {"roster": "G1", "row": null, "kind": "Address change", "pid": "P004", "detail": "Victor Hargrove: plan shows 1619 Riverside Pkwy, Columbus; roster + self-attested source show 9076 Willow Ct, Akron.", "confidence": 0.94, "suggestion": "Update address in system of record + directory", "evidence": ["Roster: new address", "Self-attested source: new address (recent)", "Plan record: old address"]}, {"roster": "G2", "row": null, "kind": "Address change", "pid": "P011", "detail": "Felix Castellano: plan shows 8185 Oak Ridge Rd, Fort Wayne; roster + self-attested source show 7877 Willow Ct, Indianapolis.", "confidence": 0.94, "suggestion": "Update address in system of record + directory", "evidence": ["Roster: new address", "Self-attested source: new address (recent)", "Plan record: old address"]}, {"roster": "G2", "row": null, "kind": "Address change", "pid": "P023", "detail": "Tomas Larsen: plan shows 7450 Lakeview Dr, Fort Wayne; roster + self-attested source show 4643 Summit Way, Dayton.", "confidence": 0.94, "suggestion": "Update address in system of record + directory", "evidence": ["Roster: new address", "Self-attested source: new address (recent)", "Plan record: old address"]}, {"roster": "G1", "row": null, "kind": "Address change", "pid": "P031", "detail": "Elena Okafor: plan shows 4445 Lakeview Dr, Fort Wayne; roster + self-attested source show 4019 Elm Park Blvd, Indianapolis.", "confidence": 0.94, "suggestion": "Update address in system of record + directory", "evidence": ["Roster: new address", "Self-attested source: new address (recent)", "Plan record: old address"]}, {"roster": "G1", "row": null, "kind": "Address change", "pid": "P040", "detail": "Nina Lopez: plan shows 5478 Elm Park Blvd, Akron; roster + self-attested source show 4781 Harbor St, Columbus.", "confidence": 0.94, "suggestion": "Update address in system of record + directory", "evidence": ["Roster: new address", "Self-attested source: new address (recent)", "Plan record: old address"]}, {"roster": "G1", "row": null, "kind": "Phone change", "pid": "P007", "detail": "Lucy Delgado: phone on file differs from roster and self-attested source.", "confidence": 0.9, "suggestion": "Update phone", "evidence": ["Roster and self-attested source agree", "Plan record outdated"]}, {"roster": "G1", "row": null, "kind": "Phone change", "pid": "P019", "detail": "Jonah Lopez: phone on file differs from roster and self-attested source.", "confidence": 0.9, "suggestion": "Update phone", "evidence": ["Roster and self-attested source agree", "Plan record outdated"]}, {"roster": "G2", "row": null, "kind": "License lapsed", "pid": "P014", "detail": "Leah Vance: state license expired 2026-09-30.", "confidence": 0.97, "suggestion": "Suppress from directory; notify credentialing", "evidence": ["State board: expired", "Roster: active"]}]};
+
+/* ---------------- state ---------------- */
+const byId = Object.fromEntries(DATA.providers.map(p=>[p.id,p]));
+const groupBy = Object.fromEntries(DATA.groups.map(g=>[g.id,g]));
+let S;
+function freshState(){
+  return {
+    mode:'after',
+    threshold:0.95,
+    rosters: DATA.groups.map(g=>({gid:g.id, status:'Received', rows:DATA.rosters[g.id].length, received:'Nov 10, 2026'})),
+    exceptions: [], // populated on processing
+    outreach: [],
+    audit: [],
+    autoAccepted: 0,
+    directoryFixed: 0,
+    selectedRoster: 'G2',
+    selectedExc: null,
+    excFilter: 'Open',
+    selectedCall: null,
+  };
+}
+S = freshState();
+
+const NEVER_AUTO = ['Possible ghost listing','Retro termination'];
+/* column mapping the "AI" proposes, per roster format */
+const MAPS = {
+  G1:[["Prov Name","Provider name (Last, First Cred)",0.97],["NPI #","NPI",0.99],["Spec","Specialty → taxonomy",0.91],["Addr1","Street",0.98],["City","City",0.99],["ST","State",0.99],["Zip","ZIP",0.99],["Phone","Phone",0.98],["Accepting New Pts","Accepting new patients",0.95],["Action","Change type",0.93],["Eff Date","Effective date",0.96]],
+  G2:[["Last","Last name",0.98],["First","First name",0.98],["Degree","Credential",0.96],["Provider ID","NPI (validated: 10 digits)",0.9],["Specialty Desc","Specialty → taxonomy (free text)",0.78],["Practice Location","Street + City + State + ZIP (parsed)",0.86],["Office #","Phone",0.95],["Panel","Accepting new patients (Open/Closed)",0.89],["Change","Change type",0.84],["Term Dt","Termination date",0.92]],
+  G3:[["Provider","Provider name (strip 'Dr.')",0.93],["NPI","NPI",0.99],["Type","Specialty → taxonomy",0.94],["Location (full)","Street + City + State + ZIP (parsed)",0.83],["Tel","Phone",0.9],["New pts?","Accepting new patients",0.92],["Start","Effective date (4 formats normalized)",0.81]],
+};
+
+/* ---------------- helpers ---------------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nm = p=>p?`${p.first} ${p.last}, ${p.cred}`:'New provider';
+function confColor(c){return c>=0.9?'var(--good)':c>=0.7?'var(--warn)':'var(--bad)'}
+function confBar(c){return `<span class="bar"><i style="width:${Math.round(c*100)}%;background:${confColor(c)}"></i></span> <span class="mono">${Math.round(c*100)}%</span>`}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
+let clock = new Date('2026-11-11T09:12:00');
+function stamp(){clock = new Date(clock.getTime()+ (40+Math.random()*120)*1000); return clock.toTimeString().slice(0,5)}
+function log(actor, action, detail){S.audit.unshift({t:stamp(), actor, action, detail});}
+const kindPill = k=>{
+  const m={'Address change':'p-acc','Phone change':'p-acc','Specialty conflict':'p-warn','Missing NPI':'p-bad','Duplicate row':'p-grey','Retro termination':'p-warn','Possible ghost listing':'p-vio','Invalid phone':'p-bad','License lapsed':'p-bad'};
+  return `<span class="pill ${m[k]||'p-grey'}">${esc(k)}</span>`};
+const statusPill = s=>{const m={'Open':'p-warn','Auto-resolved':'p-good','Approved':'p-good','Overridden':'p-acc','In outreach':'p-vio','Resolved via outreach':'p-good','Received':'p-grey','Mapped':'p-acc','Processed':'p-good','Queued':'p-grey','Confirmed':'p-good','Changed':'p-acc','No answer':'p-warn','Provider left practice':'p-bad'};return `<span class="pill ${m[s]||'p-grey'}">${esc(s)}</span>`};
+
+/* ---------------- metrics ---------------- */
+function metrics(){
+  const processed = S.rosters.filter(r=>r.status==='Processed');
+  const rowsProcessed = processed.reduce((a,r)=>a+r.rows,0);
+  const exc = S.exceptions;
+  const open = exc.filter(e=>e.status==='Open').length;
+  const inOut = exc.filter(e=>e.status==='In outreach').length;
+  const done = exc.filter(e=>!['Open','In outreach'].includes(e.status)).length;
+  const touchless = rowsProcessed? (rowsProcessed - exc.filter(e=>!e.auto).length)/rowsProcessed : 0;
+  const totalIssues = DATA.issues.length;
+  const fixed = done;
+  // directory accuracy: share of 48 providers with no unresolved known issue
+  const issueProv = new Set(DATA.issues.filter(i=>i.pid).map(i=>i.pid));
+  const resolvedProv = new Set(exc.filter(e=>!['Open','In outreach'].includes(e.status) && e.pid).map(e=>e.pid));
+  const badNow = [...issueProv].filter(p=>!resolvedProv.has(p)).length;
+  const acc = (DATA.providers.length - badNow)/DATA.providers.length;
+  const correct = exc.filter(e=>['Approved','Auto-resolved','Resolved via outreach'].includes(e.status)).length;
+  const nsm = totalIssues? correct/totalIssues : 0;
+  const human = exc.filter(e=>['Approved','Overridden'].includes(e.status));
+  const overrideRate = human.length? exc.filter(e=>e.status==='Overridden').length/human.length : 0;
+  const riskyAuto = exc.filter(e=>e.auto && e.confidence<0.9).length;
+  const calls = S.outreach.length, offices = new Set(S.outreach.map(o=>o.pid)).size;
+  return {processed:processed.length, rowsProcessed, open, inOut, done, touchless, acc, totalIssues, fixed, nsm, correct, overrideRate, riskyAuto, calls, offices};
+}
+
+/* ---------------- views ---------------- */
+function header(title, lede, key){
+  return `<div class="top"><div><h1>${title}</h1><p class="lede">${lede}</p></div>
+  <div class="small muted" style="text-align:right;white-space:nowrap">${esc(DATA.plan.name.replace(' (fictional)',''))}<br>Provider Data Operations</div></div>`;
+}
+
+function vOverview(){
+  const m = metrics();
+  const fmt = x=>Math.round(x*100)+'%';
+  return `${header('Command center', `${DATA.plan.members} members · ${DATA.plan.clinicians} clinicians. Every roster, exception and directory change, from intake to attestation.`, 'overview')}
+  <div class="grid g4" style="margin-bottom:14px">
+    <div class="card kpi" style="background:#0f1726;color:#fff;border-color:#0f1726"><div class="lab" style="color:#9fb0cc">Provider changes live and correct within 30 days</div><div class="val">${m.correct} / ${m.totalIssues}</div><div class="sub" style="color:#c9d1df">${fmt(m.nsm)} of known changes · ${m.processed}/${S.rosters.length} rosters in</div></div>
+    <div class="card kpi"><div class="lab">Processed automatically</div><div class="val">${m.rowsProcessed?fmt(m.touchless):'–'}</div><div class="sub">of roster rows, no manual work</div></div>
+    <div class="card kpi"><div class="lab">Open exceptions</div><div class="val">${m.open}</div><div class="sub">${m.inOut} with outreach · ${m.done} closed</div></div>
+    <div class="card kpi"><div class="lab">Directory accuracy (sample)</div><div class="val">${fmt(m.acc)}</div><div class="sub">48 providers with no unresolved issue</div></div>
+  </div>
+  <div class="card" style="margin-bottom:14px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Data quality controls</h2><span class="small muted">Automation policy: auto-apply at ≥ ${Math.round(S.threshold*100)}% confidence · <a href="#intake">change</a></span></div>
+    <div class="grid g3" style="margin-top:10px">
+      <div><div class="small muted">Auto-fixes below 90% confidence</div><div style="font-size:20px;font-weight:700;color:${m.riskyAuto?'var(--bad)':'var(--good)'}">${m.riskyAuto}</div><div class="small muted">applied without review below 90% confidence</div></div>
+      <div><div class="small muted">Suggestions overridden by your team</div><div style="font-size:20px;font-weight:700">${m.overrideRate?Math.round(m.overrideRate*100)+'%':'–'}</div><div class="small muted">reasons feed back into future suggestions</div></div>
+      <div><div class="small muted">Calls per provider office</div><div style="font-size:20px;font-weight:700">${m.offices?(m.calls/m.offices).toFixed(1):'–'}</div><div class="small muted">offices are not called twice for the same record</div></div>
+    </div></div>
+  <div class="card" style="margin-bottom:14px"><h2>Workflow pipeline</h2>
+    <div class="flow">
+      <div class="node" data-go="intake"><b>1 · Intake &amp; mapping</b><span>Rosters in any format</span><div class="n">${S.rosters.filter(r=>r.status!=='Processed').length} waiting</div></div>
+      <div class="node" data-go="exceptions"><b>2 · Exception review</b><span>Only what needs judgment</span><div class="n">${m.open} open</div></div>
+      <div class="node" data-go="outreach"><b>3 · Provider outreach</b><span>AI calls for low-confidence data</span><div class="n">${S.outreach.filter(o=>o.status==='Queued').length} queued</div></div>
+      <div class="node" data-go="compliance"><b>4 · Directory &amp; compliance</b><span>30-day clock, attestation</span><div class="n">${m.done} changes ready</div></div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h2>Needs your attention</h2>${attention()}</div>
+    <div class="card"><h2>Exceptions by type</h2>${excByType()}</div>
+  </div>`;
+}
+function attention(){
+  const items=[];
+  const waiting=S.rosters.filter(r=>r.status!=='Processed');
+  if(waiting.length) items.push([`${waiting.length} roster${waiting.length>1?'s':''} received and ready to process`, waiting.map(r=>groupBy[r.gid].name).join(', '), 'intake', 'Process']);
+  const open=S.exceptions.filter(e=>e.status==='Open');
+  const low=open.filter(e=>e.confidence<0.6).length;
+  if(open.length) items.push([`${open.length} exception${open.length>1?'s':''} awaiting review`, low?`${low} low-confidence, may need provider verification`:'evidence and suggested fix ready', 'exceptions', 'Review']);
+  const q=S.outreach.filter(o=>o.status==='Queued').length;
+  if(q) items.push([`${q} verification call${q>1?'s':''} queued`, 'results write back to the record automatically', 'outreach', 'Open']);
+  const late=S.exceptions.filter(e=>e.kind==='Retro termination'&&['Open','In outreach'].includes(e.status)).length;
+  if(late) items.push([`${late} change past the 30-day update window`, 'retroactive termination: claims since the effective date may be affected', 'compliance', 'View']);
+  if(!items.length) return `<div class="empty small">All caught up. Attestation evidence is current.</div>`;
+  return items.map(([t,sub,go,b])=>`<div class="chk" style="justify-content:space-between"><div><b>${esc(t)}</b><div class="small muted">${esc(sub)}</div></div><button class="btn" data-go="${go}">${b}</button></div>`).join('')+
+    (waiting.length>1?`<div class="row" style="margin-top:10px"><button class="btn pri" id="runall">Process all received rosters</button></div>`:'');
+}
+function excByType(){
+  if(!S.exceptions.length) return `<div class="empty small">Process a roster to see exceptions.</div>`;
+  const c={}; S.exceptions.forEach(e=>{c[e.kind]=c[e.kind]||{n:0,open:0};c[e.kind].n++; if(e.status==='Open')c[e.kind].open++});
+  const max=Math.max(...Object.values(c).map(x=>x.n));
+  return `<table>${Object.entries(c).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>`<tr><td>${kindPill(k)}</td><td style="width:45%"><div class="progress"><i style="width:${v.n/max*100}%"></i></div></td><td class="mono">${v.n}</td><td class="small muted">${v.open} open</td></tr>`).join('')}</table>`;
+}
+
+function vIntake(){
+  const r = S.rosters.find(x=>x.gid===S.selectedRoster); const g=groupBy[r.gid];
+  const rows = DATA.rosters[r.gid]; const cols = Object.keys(rows[0]);
+  return `${header('1 · Roster intake', 'Rosters from provider groups, in any layout. Columns are mapped to your standard fields automatically; only low-confidence columns need a one-time check.', 'intake')}
+  <div class="split">
+    <div class="card"><h2>Inbox</h2><table><tr><th>Provider group</th><th>Format</th><th>Rows</th><th>Status</th></tr>
+      ${S.rosters.map(x=>`<tr class="click ${x.gid===S.selectedRoster?'sel':''}" data-roster="${x.gid}"><td><b>${esc(groupBy[x.gid].name)}</b><div class="small muted">TIN ${groupBy[x.gid].tin}${groupBy[x.gid].delegated?' · delegated':''}</div></td><td class="small">${esc(groupBy[x.gid].format)}</td><td class="mono">${x.rows}</td><td>${statusPill(x.status)}</td></tr>`).join('')}
+    </table></div>
+    <div class="card"><h2>Proposed column mapping · ${esc(g.name)}</h2>
+      <table><tr><th>Source column</th><th>Maps to</th><th>Confidence</th></tr>
+      ${MAPS[r.gid].map(([s,t,c])=>`<tr><td class="mono">${esc(s)}</td><td>${esc(t)}${c<0.85?' <span class="pill p-warn">check</span>':''}</td><td>${confBar(c)}</td></tr>`).join('')}</table>
+      <div class="row" style="margin-top:12px">
+        ${r.status==='Processed'?`<span class="pill p-good">Processed · exceptions routed</span><button class="btn" data-go="exceptions">View exceptions →</button>`:
+        `<button class="btn pri" id="process" data-g="${r.gid}">${r.status==='Mapped'?'Process roster':'Confirm mapping & process'}</button><span class="small muted">Mapping is saved for this group's future rosters.</span>`}
+      </div>
+      <div id="proc" class="hidden" style="margin-top:12px"><div class="progress"><i id="procbar" style="width:0"></i></div><div class="small muted" id="procmsg" style="margin-top:6px"></div></div>
+    </div>
+  </div>
+  ${policyCard()}
+  <div class="card" style="margin-top:14px;overflow:auto"><h2>Raw file preview · first 6 rows, as received</h2>
+    <table><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>${rows.slice(0,6).map(row=>`<tr>${cols.map(c=>`<td class="mono">${esc(row[c])}</td>`).join('')}</tr>`).join('')}</table></div>`;
+}
+
+function policyNumbers(t){
+  const elig = DATA.issues.filter(i=>!NEVER_AUTO.includes(i.kind));
+  const auto = elig.filter(i=>i.confidence>=t);
+  return {auto:auto.length, review:DATA.issues.length-auto.length, risky:auto.filter(i=>i.confidence<0.9).length};
+}
+function policyCard(){
+  const n = policyNumbers(S.threshold);
+  return `<div class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Automation policy</h2><span class="small muted">Set by your compliance lead · applies to the next roster processed</span></div>
+  <div class="row" style="margin-top:10px;gap:14px"><span>Auto-apply a fix when confidence is at least</span>
+    <input type="range" id="thr" min="80" max="99" step="1" value="${Math.round(S.threshold*100)}" style="width:220px"><b id="thrv" class="mono">${Math.round(S.threshold*100)}%</b></div>
+  <div class="small" id="thrx" style="margin-top:8px;color:var(--ink2)">${policyText(n)}</div>
+  <div class="small muted" style="margin-top:6px">Guardrail: removing a provider or applying a termination always goes to a person, at any threshold. In healthcare the cost of a wrong automated change is high, so the AI recommends and a person decides.</div></div>`;
+}
+function policyText(n){return `Across all three rosters: <b>${n.auto}</b> of ${DATA.issues.length} known issues auto-apply, <b>${n.review}</b> go to a person${n.risky?`, <b style="color:var(--bad)">${n.risky} auto-applied below 90% confidence</b> (less manual review, more risk)`:''}.`}
+function processRoster(gid){
+  const r = S.rosters.find(x=>x.gid===gid); if(r.status==='Processed') return;
+  const stages=['Parsing layout','Standardizing names, addresses, specialties','Matching to plan records (NPI + TIN + location)','Validating against self-attested source, state board, registry','Scoring confidence and routing exceptions'];
+  $('#proc')?.classList.remove('hidden'); let i=0;
+  const btn=$('#process'); if(btn) btn.disabled=true;
+  const tick=()=>{
+    if($('#procbar')) $('#procbar').style.width=((i+1)/stages.length*100)+'%';
+    if($('#procmsg')) $('#procmsg').textContent=stages[i];
+    i++; if(i<stages.length) setTimeout(tick,380); else setTimeout(()=>{finishRoster(gid); render();},400);
+  }; tick();
+}
+function finishRoster(gid){
+  const r = S.rosters.find(x=>x.gid===gid); if(r.status==='Processed') return;
+  r.status='Processed';
+  const iss = DATA.issues.filter(i=>i.roster===gid);
+  iss.forEach((i,k)=>{
+    const guarded = NEVER_AUTO.includes(i.kind);
+    const auto = !guarded && i.confidence>=S.threshold;
+    S.exceptions.push({...i, id:`E-${gid}-${k+1}`, status: auto?'Auto-resolved':'Open', auto, appliedAt:S.threshold,
+      note: auto?`Auto-applied (confidence ${Math.round(i.confidence*100)}% ≥ policy ${Math.round(S.threshold*100)}%)`:(guarded&&i.confidence>=S.threshold?'Guardrail: removals and terminations always need a person, whatever the confidence':'')});
+    if(auto) log('Automated validation','Auto-resolved',`${i.kind}: ${i.detail}`);
+  });
+  log('Automated validation','Processed roster',`${groupBy[gid].name}: ${r.rows} rows, ${iss.length} exceptions (${iss.filter(i=>i.confidence>=0.95).length} auto-resolved)`);
+  toast(`${groupBy[gid].name}: ${r.rows} rows processed, ${S.exceptions.filter(e=>e.roster===gid&&e.status==='Open').length} need review`);
+}
+
+function vExceptions(){
+  const list = S.exceptions.filter(e=> S.excFilter==='All' || (S.excFilter==='Open' ? e.status==='Open' : e.status!=='Open'));
+  const sel = S.exceptions.find(e=>e.id===S.selectedExc) || list[0];
+  if(sel) S.selectedExc = sel.id;
+  return `${header('2 · Exception review', 'Records that need a decision. Each shows the evidence from every source, a suggested fix and a confidence score.', 'exceptions')}
+  ${!S.exceptions.length?`<div class="card empty">No exceptions. New ones appear here when rosters are processed. <button class="btn pri" data-go="intake">Go to intake</button></div>`:`
+  <div class="split">
+    <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Queue</h2>
+      <select id="excf">${['Open','Closed','All'].map(o=>`<option ${S.excFilter===o?'selected':''}>${o}</option>`).join('')}</select></div>
+      ${list.length?`<table><tr><th>Issue</th><th>Provider</th><th>Confidence</th><th>Status</th></tr>
+      ${list.sort((a,b)=>a.confidence-b.confidence).map(e=>`<tr class="click ${sel&&e.id===sel.id?'sel':''}" data-exc="${e.id}"><td>${kindPill(e.kind)}<div class="small muted">${esc(groupBy[e.roster].name)}</div></td><td>${esc(nm(byId[e.pid]))}</td><td>${confBar(e.confidence)}</td><td>${statusPill(e.status)}</td></tr>`).join('')}</table>`:`<div class="empty small">Nothing here.</div>`}
+    </div>
+    <div class="card">${sel?excDetail(sel):''}</div>
+  </div>`}`;
+}
+function excDetail(e){
+  const p = byId[e.pid]; const open = e.status==='Open';
+  return `<div class="row" style="justify-content:space-between"><div>${kindPill(e.kind)} ${statusPill(e.status)}</div><span class="mono muted">${e.id}</span></div>
+  <h2 style="margin-top:10px">${esc(nm(p))}</h2>
+  ${p?`<div class="small muted">NPI ${p.npi} · ${esc(p.specialty)} · ${esc(groupBy[p.group].name)}</div>`:''}
+  <p>${esc(e.detail)}</p>
+  <h3>Evidence</h3>${e.evidence.map(x=>`<div class="ev"><span class="dot" style="background:${/old|outdated|Inactive|expired|blank|fails|No |past|Family Practice/i.test(x)?'var(--warn)':'var(--good)'};margin-top:5px"></span>${esc(x)}</div>`).join('')}
+  <h3 style="margin-top:12px">Suggested action</h3><div style="margin-bottom:6px">${esc(e.suggestion)}</div><div>Confidence ${confBar(e.confidence)}</div>
+  ${e.kind==='Possible ghost listing'?`<div class="banner" style="margin-top:10px">Adequacy guardrail: removing this provider drops in-network psychiatry/behavioral options in the county. Confirm before removal.</div>`:''}
+  ${e.note?`<div class="small muted" style="margin-top:8px">${esc(e.note)}</div>`:''}
+  ${open?`<div class="row" style="margin-top:14px"><button class="btn good" data-act="approve">Approve fix</button><button class="btn" data-act="override">Override (keep current)</button><button class="btn" data-act="outreach" style="border-color:#cdbcf3;color:var(--violet)">Send to outreach</button></div>`:''}`;
+}
+function actOnExc(act){
+  const e = S.exceptions.find(x=>x.id===S.selectedExc); if(!e) return;
+  if(act==='approve'){e.status='Approved'; e.note='Approved by analyst; pushed to system of record and directory.'; log('Analyst (A. Rivera)','Approved fix',`${e.kind}: ${e.suggestion}`); toast('Fix approved and pushed downstream');}
+  if(act==='override'){e.status='Overridden'; e.note='Analyst kept current value; reason captured for model feedback.'; log('Analyst (A. Rivera)','Overrode suggestion',`${e.kind} for ${nm(byId[e.pid])}`); toast('Override recorded as feedback');}
+  if(act==='outreach'){e.status='In outreach'; S.outreach.push({id:'C-'+(S.outreach.length+101), exc:e.id, pid:e.pid, status:'Queued', reason:e.kind}); log('Analyst (A. Rivera)','Sent to outreach',`${e.kind} for ${nm(byId[e.pid])}`); toast('Queued for AI verification call');}
+  const next = S.exceptions.find(x=>x.status==='Open'); S.selectedExc = next?next.id:e.id; render();
+}
+
+function vOutreach(){
+  const sel = S.outreach.find(o=>o.id===S.selectedCall) || S.outreach[0]; if(sel) S.selectedCall=sel.id;
+  return `${header('3 · Provider outreach', 'Automated verification calls to provider offices for records that can\'t be confirmed from data alone. Results write back to the record and close the exception.', 'outreach')}
+  ${!S.outreach.length?`<div class="card empty">Nothing queued. Send an exception to outreach from <a href="#exceptions">Exception review</a>.<br><br><button class="btn" id="seedout">Queue all low-confidence exceptions</button></div>`:`
+  <div class="split">
+    <div class="card"><h2>Call queue</h2><table><tr><th>Call</th><th>Provider office</th><th>Reason</th><th>Status</th></tr>
+    ${S.outreach.map(o=>`<tr class="click ${sel&&o.id===sel.id?'sel':''}" data-call="${o.id}"><td class="mono">${o.id}</td><td>${esc(nm(byId[o.pid]))}<div class="small muted">${byId[o.pid]?esc(byId[o.pid].phone):'—'}</div></td><td>${kindPill(o.reason)}</td><td>${statusPill(o.status)}</td></tr>`).join('')}</table></div>
+    <div class="card"><h2>Verification call ${sel?sel.id:''}</h2>
+      <div class="transcript" id="tx">${sel&&sel.tx?sel.tx:'<span class="sys">Ready to call. The transcript and structured result appear here.</span>'}</div>
+      <div class="row" style="margin-top:10px">${sel&&sel.status==='Queued'?`<button class="btn pri" id="runcall">Run call</button>`:''}${sel&&sel.result?`<span class="small">Result written back: <b>${esc(sel.result)}</b></span>`:''}</div>
+    </div>
+  </div>`}`;
+}
+function script(o){
+  const p = byId[o.pid]; const office = p?`${p.last} ${p.specialty.includes('Psych')||p.specialty.includes('Social')?'Behavioral Health':'Medical'} Office`:'Office';
+  if(o.reason==='Possible ghost listing') return {lines:[
+    ['sys',`Dialing ${p.phone} · IVR detected`],['ag','Agent: Navigating menu → option 0 (front desk)'],
+    ['of',`Office: ${office}, how can I help?`],['ag',`Agent: I'm calling on behalf of MidAmerica Health to confirm directory details for Dr. ${p.last}. Is Dr. ${p.last} still seeing patients at this location?`],
+    ['of',`Office: No, Dr. ${p.last} retired in the spring. We haven't updated the insurers yet.`],['ag','Agent: Thank you. Is there another provider taking their patients?'],
+    ['of','Office: Dr. Pruitt took over the panel, she is accepting new patients.'],['sys','Structured result: provider_left_practice=true · successor_lead=captured · confidence 0.97']],
+    result:'Provider left practice', excStatus:'Resolved via outreach', note:'Removed from directory. Adequacy recheck triggered; successor provider lead sent to network team.'};
+  if(o.reason==='Invalid phone') return {lines:[
+    ['sys','Number on roster is invalid · dialing self-attested number instead'],['of','Office: Riverbend Pediatrics.'],
+    ['ag',`Agent: Confirming the best phone number for appointments with Dr. ${p.last}?`],['of',`Office: Yes, it's this one, ${p.phone}.`],
+    ['sys','Structured result: phone_confirmed · confidence 0.96']], result:'Confirmed', excStatus:'Resolved via outreach', note:'Phone corrected from outreach confirmation.'};
+  return {lines:[['sys',`Dialing ${p?p.phone:'registry match'}`],['of','Office: Hello, front desk.'],['ag','Agent: Confirming address, phone and whether the provider is accepting new patients…'],['of','Office: All of that is correct, and yes, accepting new patients.'],['sys','Structured result: attributes_confirmed · confidence 0.95']],
+    result:'Confirmed', excStatus:'Resolved via outreach', note:'Details confirmed by provider office.'};
+}
+function runCall(){
+  const o = S.outreach.find(x=>x.id===S.selectedCall); if(!o||o.status!=='Queued') return;
+  const s = script(o); const tx=$('#tx'); tx.innerHTML=''; $('#runcall').disabled=true; let i=0; let html='';
+  const step=()=>{ const [k,t]=s.lines[i]; html+=`<span class="${k}">${esc(t)}</span>\n`; tx.innerHTML=html; i++;
+    if(i<s.lines.length) setTimeout(step,520); else {
+      o.status = s.result==='Confirmed'?'Confirmed':s.result; o.result=s.result; o.tx=html;
+      const e=S.exceptions.find(x=>x.id===o.exc); if(e){e.status=s.excStatus; e.note=s.note;}
+      log('Outreach agent','Call completed',`${o.id} ${nm(byId[o.pid])}: ${s.result}`);
+      toast('Call result written back to the record'); setTimeout(render,500);} };
+  step();
+}
+
+function vCompliance(){
+  const changes = S.exceptions.filter(e=>!['Open','In outreach','Overridden'].includes(e.status) && e.pid);
+  const pending = S.exceptions.filter(e=>['Open','In outreach'].includes(e.status));
+  const m = metrics();
+  const daysLeft = e=> e.kind==='Retro termination'? -42 : 30 - (e.id.charCodeAt(e.id.length-1)%9);
+  const checks = [
+    ['Every directory change has source evidence and timestamp', S.audit.length>0],
+    ['All roster changes reflected within 30 days', pending.every(e=>daysLeft(e)>0) && S.rosters.every(r=>r.status==='Processed')],
+    ['Inactive / lapsed providers suppressed from directory', !S.exceptions.some(e=>['License lapsed','Possible ghost listing'].includes(e.kind) && ['Open','In outreach'].includes(e.status)) && S.exceptions.some(e=>e.kind==='License lapsed')],
+    ['Network adequacy rechecked after removals', S.outreach.some(o=>o.result==='Provider left practice')],
+    ['Open exceptions below 5% of roster rows', S.exceptions.length>0 && m.open/Math.max(1,m.rowsProcessed)<0.05],
+  ];
+  const ready = checks.filter(c=>c[1]).length;
+  return `${header('4 · Directory &amp; compliance', 'Every change tracked against the 30-day CMS update window, with the evidence for your annual directory attestation built as work is done.', 'compliance')}
+  <div class="grid g3" style="margin-bottom:14px">
+    <div class="card kpi"><div class="lab">Changes pushed to directory</div><div class="val">${changes.length}</div><div class="sub">with audit evidence</div></div>
+    <div class="card kpi"><div class="lab">Changes still pending</div><div class="val">${pending.length}</div><div class="sub">${pending.filter(e=>daysLeft(e)<=0).length} past the 30-day clock</div></div>
+    <div class="card kpi"><div class="lab">Attestation readiness</div><div class="val">${ready} / ${checks.length}</div><div class="sub">checks passing</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h2>30-day update clock</h2>${pending.length?`<table><tr><th>Change</th><th>Provider</th><th>Days left</th></tr>${pending.map(e=>{const d=daysLeft(e);return `<tr><td>${kindPill(e.kind)}</td><td>${esc(nm(byId[e.pid]))}</td><td>${d<=0?`<span class="pill p-bad">${Math.abs(d)} days late</span>`:`<span class="pill ${d<25?'p-warn':'p-grey'}">${d} days</span>`}</td></tr>`}).join('')}</table>`:`<div class="empty small">${S.exceptions.length?'Nothing pending. All changes are within the clock.':'Process rosters to start the clock.'}</div>`}</div>
+    <div class="card"><h2>Attestation evidence pack</h2>${checks.map(([t,ok])=>`<div class="chk"><span class="dot" style="background:${ok?'var(--good)':'#cfd5de'}"></span>${esc(t)}</div>`).join('')}
+      <div class="row" style="margin-top:12px"><button class="btn" id="pack" ${ready<checks.length?'disabled':''}>Generate attestation pack</button><span class="small muted">${ready<checks.length?'Complete the open checks first':'Ready'}</span></div></div>
+  </div>`;
+}
+
+function vAudit(){
+  return `${header('Audit trail','Every automated and human decision, with who made it, when and why. Exportable for regulators and internal audit.')}
+  <div class="card">${S.audit.length?`<table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th></tr>${S.audit.map(a=>`<tr><td class="mono">${a.t}</td><td>${a.actor.includes('Automated')||a.actor.includes('agent')?`<span class="pill p-acc">${esc(a.actor)}</span>`:`<span class="pill p-grey">${esc(a.actor)}</span>`}</td><td><b>${esc(a.action)}</b></td><td class="small">${esc(a.detail)}</td></tr>`).join('')}</table>`:`<div class="empty">No activity yet.</div>`}</div>`;
+}
+
+/* ---------------- router ---------------- */
+const VIEWS={overview:vOverview,intake:vIntake,exceptions:vExceptions,outreach:vOutreach,compliance:vCompliance,audit:vAudit};
+function current(){const h=location.hash.slice(1);return VIEWS[h]?h:'overview'}
+function render(){
+  const v=current();
+  document.querySelectorAll('nav a[data-v]').forEach(a=>a.classList.toggle('active',a.dataset.v===v));
+  $('#main').innerHTML=VIEWS[v]();
+  const waiting=S.rosters.filter(r=>r.status!=='Processed').length;
+  $('#nb-intake').textContent=waiting||''; $('#nb-intake').classList.toggle('hidden',!waiting);
+  const op=S.exceptions.filter(e=>e.status==='Open').length; $('#nb-exc').textContent=op; $('#nb-exc').classList.toggle('hidden',!op);
+  const q=S.outreach.filter(o=>o.status==='Queued').length; $('#nb-out').textContent=q; $('#nb-out').classList.toggle('hidden',!q);
+  $('#nb-audit').textContent=S.audit.length; $('#nb-audit').classList.toggle('hidden',!S.audit.length);
+}
+window.addEventListener('hashchange',()=>{window.scrollTo(0,0);render()});
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('[data-go],[data-mode],[data-roster],[data-exc],[data-act],[data-call],#process,#runall,#runcall,#seedout,#reset,#pack');
+  if(!t) return;
+  if(t.dataset.go){location.hash=t.dataset.go;return}
+  if(t.dataset.mode){S.mode=t.dataset.mode;render();return}
+  if(t.dataset.roster){S.selectedRoster=t.dataset.roster;render();return}
+  if(t.dataset.exc){S.selectedExc=t.dataset.exc;render();return}
+  if(t.dataset.act){actOnExc(t.dataset.act);return}
+  if(t.dataset.call){S.selectedCall=t.dataset.call;render();return}
+  if(t.id==='process'){processRoster(t.dataset.g);return}
+  if(t.id==='runall'){DATA.groups.forEach(g=>finishRoster(g.id));render();return}
+  if(t.id==='runcall'){runCall();return}
+  if(t.id==='seedout'){S.exceptions.filter(e=>e.status==='Open'&&e.confidence<0.6).forEach(e=>{e.status='In outreach';S.outreach.push({id:'C-'+(S.outreach.length+101),exc:e.id,pid:e.pid,status:'Queued',reason:e.kind});log('Analyst (A. Rivera)','Sent to outreach',`${e.kind} for ${nm(byId[e.pid])}`)});render();return}
+  if(t.id==='reset'){ev.preventDefault();S=freshState();clock=new Date('2026-11-11T09:12:00');location.hash='overview';render();toast('Data reset');return}
+  if(t.id==='pack'){log('Compliance (J. Osei)','Generated attestation pack','Evidence for annual directory accuracy attestation compiled from audit trail');toast('Attestation pack compiled from the audit trail');render();return}
+});
+document.addEventListener('change',ev=>{if(ev.target.id==='excf'){S.excFilter=ev.target.value;S.selectedExc=null;render()}});
+document.addEventListener('input',ev=>{if(ev.target.id==='thr'){S.threshold=ev.target.value/100;$('#thrv').textContent=ev.target.value+'%';$('#thrx').innerHTML=policyText(policyNumbers(S.threshold));}});
+render();
+</script>
+</body>
+</html>
